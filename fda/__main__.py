@@ -29,9 +29,9 @@ from fda.report.builder import build_report, report_to_json
 from fda.report.display import display_report
 
 # Default submit endpoint — users don't need to think about this
-DEFAULT_SUBMIT_URL = "https://api.privatae.ai/api/mastercode/relay/fda-submit"
+DEFAULT_SUBMIT_URL = "https://privatae.ai/api/mastercode/relay/fda-submit"
 
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 
 BANNER = f"""
   ╔═══════════════════════════════════════════╗
