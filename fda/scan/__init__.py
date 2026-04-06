@@ -1,6 +1,7 @@
 """Environment scanning modules — read-only intelligence gathering."""
 
 from .account import scan_account
+from .ai_environment import scan_ai_environment
 from .drives import scan_drives
 from .resources import scan_resources
 from .profile import scan_profile
@@ -15,4 +16,5 @@ def run_full_scan() -> dict:
         "resources": scan_resources(),
         "user_profile": scan_profile(),
         "tools": scan_tools(),
+        "ai_environment": scan_ai_environment(),
     }
