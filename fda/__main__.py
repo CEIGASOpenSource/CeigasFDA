@@ -5,6 +5,8 @@ Usage:
     openfda <challenge-nonce> --key K   # Scan with HMAC signing
     openfda --preview                   # Scan without signing or sending
 
+Or just double-click — the program will ask for your nonce.
+
 The FDA scans the local environment, checks hard gates, and produces
 a signed report for CEIGAS relay provisioning.
 """
@@ -22,6 +24,22 @@ from fda.report.display import display_report
 
 # Default submit endpoint — users don't need to think about this
 DEFAULT_SUBMIT_URL = "https://privatae.ai/api/proxy/mastercode/relay/fda-submit"
+
+BANNER = """
+  ╔═══════════════════════════════════════════╗
+  ║          OpenFDA — Environment Scan       ║
+  ║       CEIGAS Desktop Relay Setup          ║
+  ╚═══════════════════════════════════════════╝
+"""
+
+
+def _pause_before_exit(code: int = 0):
+    """Pause so the window stays open when double-clicked."""
+    try:
+        input("\n  Press Enter to close...")
+    except (EOFError, KeyboardInterrupt):
+        pass
+    sys.exit(code)
 
 
 def main():
@@ -71,19 +89,39 @@ def main():
 
     # Accept challenge as positional arg OR --challenge flag
     nonce = args.challenge or args.challenge_flag
+
+    # ── Interactive mode: no args, ask the user ───────────────
     if not args.preview and not nonce:
-        parser.error("paste your challenge nonce: openfda <nonce>\n"
-                     "  (or use --preview for unsigned scan)")
+        print(BANNER)
+        print("  Paste your challenge nonce from the Privatae setup screen.")
+        print("  (It's the code shown after you click 'Get Started')\n")
+        try:
+            nonce = input("  Challenge nonce: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n  Cancelled.\n")
+            _pause_before_exit(0)
+
+        if not nonce:
+            print("\n  No nonce provided. Run with --preview to scan without submitting.\n")
+            _pause_before_exit(1)
 
     nonce = nonce or "preview-mode"
     identity_key = args.key
     should_submit = not args.preview and not args.no_submit
+    interactive = not args.json_only
+
+    if interactive and not args.preview:
+        print(BANNER)
 
     # ── Step 1: Hard gates ────────────────────────────────────
-    if not args.json_only:
-        print("\n  Scanning environment...\n")
+    if interactive:
+        print("  Scanning environment...\n")
 
-    gates = run_all_gates()
+    try:
+        gates = run_all_gates()
+    except Exception as e:
+        print(f"  Error during gate scan: {e}\n")
+        _pause_before_exit(1)
 
     # If any gate triggers, show rejection and exit
     if gates["verdict"] == "REJECT":
@@ -92,10 +130,14 @@ def main():
             print(report_to_json(report))
         else:
             print(display_report(report))
-        sys.exit(1)
+        _pause_before_exit(1)
 
     # ── Step 2: Full environment scan ─────────────────────────
-    scan = run_full_scan()
+    try:
+        scan = run_full_scan()
+    except Exception as e:
+        print(f"  Error during environment scan: {e}\n")
+        _pause_before_exit(1)
 
     # ── Step 3: Build report ──────────────────────────────────
     report = build_report(gates, scan, nonce, identity_key)
@@ -110,25 +152,29 @@ def main():
     if args.output:
         with open(args.output, "w") as f:
             f.write(report_to_json(report))
-        if not args.json_only:
+        if interactive:
             print(f"  Report saved to: {args.output}\n")
 
     # ── Step 6: Submit ────────────────────────────────────────
     if should_submit:
-        if not args.json_only:
-            confirm = input("  Send this report to the platform? [y/N] ").strip().lower()
+        if interactive:
+            try:
+                confirm = input("  Send this report to the platform? [y/N] ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                confirm = ""
             if confirm != "y":
                 print("  Cancelled. Report not sent.\n")
-                sys.exit(0)
+                _pause_before_exit(0)
 
         success = _submit_report(report, args.submit_url, args.json_only)
-        sys.exit(0 if success else 1)
+        _pause_before_exit(0 if success else 1)
 
-    if not args.json_only and not should_submit:
+    if interactive and not should_submit:
         if args.preview:
             print("  Preview mode — report not signed or sent.\n")
         else:
             print("  Report generated. Run without --no-submit to send.\n")
+        _pause_before_exit(0)
 
 
 def _submit_report(report: dict, url: str, quiet: bool = False) -> bool:
@@ -150,17 +196,22 @@ def _submit_report(report: dict, url: str, quiet: bool = False) -> bool:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
+
+        if not quiet:
+            print("  Sending report...")
+
         with urllib.request.urlopen(req, timeout=30) as resp:
             status = resp.status
             body = resp.read().decode("utf-8", errors="replace")
 
         if status == 200:
             if not quiet:
-                print("  Report submitted successfully.\n")
+                print("  Report submitted successfully!\n")
                 try:
                     resp_data = json.loads(body)
-                    if resp_data.get("message"):
-                        print(f"  Platform: {resp_data['message']}\n")
+                    if resp_data.get("status") == "received":
+                        print("  Your entity has received the scan. Return to the")
+                        print("  setup screen in your browser to continue.\n")
                 except json.JSONDecodeError:
                     pass
             return True
