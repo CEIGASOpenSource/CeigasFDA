@@ -1,9 +1,9 @@
 """OpenFDA entry point.
 
 Usage:
-    python3 -m fda --challenge <nonce>
-    python3 -m fda --challenge <nonce> --key <identity_lock_key>
-    python3 -m fda --preview          # Run scan without signing or sending
+    openfda <challenge-nonce>           # Scan, review, submit
+    openfda <challenge-nonce> --key K   # Scan with HMAC signing
+    openfda --preview                   # Scan without signing or sending
 
 The FDA scans the local environment, checks hard gates, and produces
 a signed report for CEIGAS relay provisioning.
@@ -20,6 +20,9 @@ from fda.scan import run_full_scan
 from fda.report.builder import build_report, report_to_json
 from fda.report.display import display_report
 
+# Default submit endpoint — users don't need to think about this
+DEFAULT_SUBMIT_URL = "https://privatae.ai/api/proxy/mastercode/relay/fda-submit"
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -27,8 +30,14 @@ def main():
         description="OpenFDA — Forward Deployed Agent for CEIGAS relay provisioning",
     )
     parser.add_argument(
+        "challenge",
+        nargs="?",
+        help="Platform-issued challenge nonce (paste from the setup screen)",
+    )
+    parser.add_argument(
         "--challenge", "-c",
-        help="Platform-issued challenge nonce (required for signed reports)",
+        dest="challenge_flag",
+        help=argparse.SUPPRESS,  # Hidden — kept for backward compat
     )
     parser.add_argument(
         "--key", "-k",
@@ -41,7 +50,13 @@ def main():
     )
     parser.add_argument(
         "--submit-url",
-        help="Platform API URL to submit the report to",
+        default=DEFAULT_SUBMIT_URL,
+        help=argparse.SUPPRESS,  # Hidden — default handles it
+    )
+    parser.add_argument(
+        "--no-submit",
+        action="store_true",
+        help="Scan and display only — do not send to platform",
     )
     parser.add_argument(
         "--json-only",
@@ -54,11 +69,15 @@ def main():
     )
     args = parser.parse_args()
 
-    if not args.preview and not args.challenge:
-        parser.error("--challenge is required (or use --preview for unsigned scan)")
+    # Accept challenge as positional arg OR --challenge flag
+    nonce = args.challenge or args.challenge_flag
+    if not args.preview and not nonce:
+        parser.error("paste your challenge nonce: openfda <nonce>\n"
+                     "  (or use --preview for unsigned scan)")
 
-    nonce = args.challenge or "preview-mode"
+    nonce = nonce or "preview-mode"
     identity_key = args.key
+    should_submit = not args.preview and not args.no_submit
 
     # ── Step 1: Hard gates ────────────────────────────────────
     if not args.json_only:
@@ -94,8 +113,8 @@ def main():
         if not args.json_only:
             print(f"  Report saved to: {args.output}\n")
 
-    # ── Step 6: Submit if URL provided and user confirms ──────
-    if args.submit_url and not args.preview:
+    # ── Step 6: Submit ────────────────────────────────────────
+    if should_submit:
         if not args.json_only:
             confirm = input("  Send this report to the platform? [y/N] ").strip().lower()
             if confirm != "y":
@@ -105,12 +124,11 @@ def main():
         success = _submit_report(report, args.submit_url, args.json_only)
         sys.exit(0 if success else 1)
 
-    if not args.json_only and not args.submit_url:
+    if not args.json_only and not should_submit:
         if args.preview:
             print("  Preview mode — report not signed or sent.\n")
         else:
-            print("  Report ready. Use --submit-url to send to platform,")
-            print("  or --output to save for manual submission.\n")
+            print("  Report generated. Run without --no-submit to send.\n")
 
 
 def _submit_report(report: dict, url: str, quiet: bool = False) -> bool:
