@@ -232,7 +232,10 @@ def _submit_report(report: dict, url: str, quiet: bool = False) -> bool:
         req = urllib.request.Request(
             url,
             data=data,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "OpenFDA/1.2 (privatae.ai; environment-scan)",
+            },
             method="POST",
         )
 
