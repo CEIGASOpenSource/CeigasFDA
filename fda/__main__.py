@@ -19,6 +19,12 @@ import urllib.error
 
 from fda.gates import run_all_gates
 from fda.scan import run_full_scan
+from fda.scan.account import scan_account
+from fda.scan.drives import scan_drives
+from fda.scan.resources import scan_resources
+from fda.scan.profile import scan_profile
+from fda.scan.tools import scan_tools
+from fda.scan.ai_environment import scan_ai_environment
 from fda.report.builder import build_report, report_to_json
 from fda.report.display import display_report
 
@@ -31,6 +37,39 @@ BANNER = """
   ║       CEIGAS Desktop Relay Setup          ║
   ╚═══════════════════════════════════════════╝
 """
+
+
+def _run_scan_with_progress(interactive: bool) -> dict:
+    """Run each scan step individually with progress output."""
+    steps = [
+        ("account", "Account info", scan_account),
+        ("drives", "Drive mapping", scan_drives),
+        ("resources", "System resources", scan_resources),
+        ("profile", "User profile", scan_profile),
+        ("tools", "Installed tools", scan_tools),
+        ("ai_environment", "AI environment", scan_ai_environment),
+    ]
+    results = {}
+    for key, label, fn in steps:
+        if interactive:
+            print(f"    {label}...", end="", flush=True)
+        try:
+            results[key] = fn()
+            if interactive:
+                print(" done")
+        except Exception as e:
+            results[key] = {"error": str(e)}
+            if interactive:
+                print(f" error: {e}")
+    # Match the keys run_full_scan uses
+    return {
+        "platform": results.get("account", {}),
+        "drives": results.get("drives", []),
+        "resources": results.get("resources", {}),
+        "user_profile": results.get("profile", {}),
+        "tools": results.get("tools", {}),
+        "ai_environment": results.get("ai_environment", {}),
+    }
 
 
 def _pause_before_exit(code: int = 0):
@@ -134,7 +173,7 @@ def main():
 
     # ── Step 2: Full environment scan ─────────────────────────
     try:
-        scan = run_full_scan()
+        scan = _run_scan_with_progress(interactive)
     except Exception as e:
         print(f"  Error during environment scan: {e}\n")
         _pause_before_exit(1)

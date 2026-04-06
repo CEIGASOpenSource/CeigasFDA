@@ -245,12 +245,12 @@ def _detect_ollama(system: str, home: str) -> dict:
         if local and os.path.isdir(os.path.join(local, "Programs", "Ollama")):
             info["desktop_app"] = True
 
-    # Check if running
+    # Check if running (short timeout — ollama list hangs if server is down)
     if shutil.which("ollama"):
         try:
             result = subprocess.run(
                 ["ollama", "list"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True, text=True, timeout=3,
             )
             if result.returncode == 0 and result.stdout.strip():
                 info["running"] = True
@@ -431,9 +431,16 @@ def _detect_docker_ai_containers() -> list[dict]:
         return []
 
     try:
+        # Check docker info first — if daemon isn't running this returns fast
+        check = subprocess.run(
+            ["docker", "info"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if check.returncode != 0:
+            return []
         result = subprocess.run(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Image}}\t{{.Status}}"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True, text=True, timeout=5,
         )
         if result.returncode != 0:
             return []

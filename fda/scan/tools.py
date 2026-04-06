@@ -49,7 +49,7 @@ def scan_tools() -> dict:
             ("choco", ["choco", "--version"]),
             ("winget", ["winget", "--version"]),
             ("scoop", ["scoop", "--version"]),
-            ("wsl", ["wsl", "--status"]),
+            ("wsl", ["wsl", "--version"]),
         ]:
             version = _get_tool_version(cmd)
             if version:
