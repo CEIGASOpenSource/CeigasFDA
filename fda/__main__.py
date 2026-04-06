@@ -31,10 +31,13 @@ from fda.report.display import display_report
 # Default submit endpoint — users don't need to think about this
 DEFAULT_SUBMIT_URL = "https://privatae.ai/api/fda"
 
-BANNER = """
+VERSION = "1.2.5"
+
+BANNER = f"""
   ╔═══════════════════════════════════════════╗
   ║          OpenFDA — Environment Scan       ║
   ║       CEIGAS Desktop Relay Setup          ║
+  ║                                v{VERSION}    ║
   ╚═══════════════════════════════════════════╝
 """
 
@@ -234,7 +237,7 @@ def _submit_report(report: dict, url: str, quiet: bool = False) -> bool:
             data=data,
             headers={
                 "Content-Type": "application/json",
-                "User-Agent": "OpenFDA/1.2 (privatae.ai; environment-scan)",
+                "User-Agent": f"OpenFDA/{VERSION} (privatae.ai; environment-scan)",
             },
             method="POST",
         )
@@ -263,6 +266,17 @@ def _submit_report(report: dict, url: str, quiet: bool = False) -> bool:
                 print(f"  Response: {body[:200]}\n")
             return False
 
+    except urllib.error.HTTPError as e:
+        if not quiet:
+            body = ""
+            try:
+                body = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                pass
+            print(f"  Submission failed: HTTP {e.code}\n")
+            print(f"  URL: {url}")
+            print(f"  Response: {body[:500]}\n")
+        return False
     except urllib.error.URLError as e:
         if not quiet:
             print(f"  Connection failed: {e}\n")
