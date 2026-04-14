@@ -1,9 +1,9 @@
-"""OpenFDA entry point.
+"""CeigasFDA entry point.
 
 Usage:
-    openfda <challenge-nonce>           # Scan, review, submit
-    openfda <challenge-nonce> --key K   # Scan with HMAC signing
-    openfda --preview                   # Scan without signing or sending
+    ceigasfda <challenge-nonce>           # Scan, review, submit
+    ceigasfda <challenge-nonce> --key K   # Scan with HMAC signing
+    ceigasfda --preview                   # Scan without signing or sending
 
 Or just double-click — the program will ask for your nonce.
 
@@ -35,7 +35,7 @@ VERSION = "1.3.1"
 
 BANNER = f"""
   ╔═══════════════════════════════════════════╗
-  ║          OpenFDA — Environment Scan       ║
+  ║          CeigasFDA — Environment Scan       ║
   ║       CEIGAS Desktop Relay Setup          ║
   ║                                v{VERSION}    ║
   ╚═══════════════════════════════════════════╝
@@ -86,8 +86,8 @@ def _pause_before_exit(code: int = 0):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="openfda",
-        description="OpenFDA — Forward Deployed Agent for CEIGAS relay provisioning",
+        prog="ceigasfda",
+        description="CeigasFDA — Forward Deployed Agent for CEIGAS relay provisioning",
     )
     parser.add_argument(
         "challenge",
@@ -237,7 +237,7 @@ def _submit_report(report: dict, url: str, quiet: bool = False) -> bool:
             data=data,
             headers={
                 "Content-Type": "application/json",
-                "User-Agent": f"OpenFDA/{VERSION} (privatae.ai; environment-scan)",
+                "User-Agent": f"CeigasFDA/{VERSION} (privatae.ai; environment-scan)",
             },
             method="POST",
         )

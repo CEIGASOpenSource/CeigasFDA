@@ -18,7 +18,7 @@ except SystemExit:
         except (EOFError, KeyboardInterrupt):
             pass
 except Exception:
-    print("\n  OpenFDA encountered an error:\n")
+    print("\n  CeigasFDA encountered an error:\n")
     traceback.print_exc()
     print()
     try:

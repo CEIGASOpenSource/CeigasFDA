@@ -1,11 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec for OpenFDA standalone binary.
+"""PyInstaller spec for CeigasFDA standalone binary.
 
 Build:
     pip install pyinstaller
-    pyinstaller openfda.spec
+    pyinstaller ceigasfda.spec
 
-Produces dist/openfda/ directory with the executable and all dependencies.
+Produces dist/ceigasfda/ directory with the executable and all dependencies.
 No Python installation required on the target machine.
 """
 
@@ -54,7 +54,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='openfda',
+    name='ceigasfda',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -69,5 +69,5 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=False,
-    name='openfda',
+    name='ceigasfda',
 )

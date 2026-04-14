@@ -13,7 +13,7 @@ def display_report(report: dict) -> str:
     lines = []
     lines.append("")
     lines.append("=" * 60)
-    lines.append("  OpenFDA — Environment Report")
+    lines.append("  CeigasFDA — Environment Report")
     lines.append("=" * 60)
     lines.append("")
 

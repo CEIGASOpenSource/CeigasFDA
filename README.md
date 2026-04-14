@@ -1,8 +1,8 @@
-# OpenFDA — Forward Deployed Agent
+# CeigasFDA — Forward Deployed Agent
 
 **Open-source environment scanner for CEIGAS relay provisioning.**
 
-OpenFDA is a lightweight, read-only agent that scans a user's desktop environment before a [CEIGAS](https://github.com/CEIGASOpenSource)-governed relay is provisioned. It gathers environment intelligence so the entity can build an informed, scoped automation policy — and produces a cryptographic hash chain that prevents any tampering between scan and relay deployment.
+CeigasFDA is a lightweight, read-only agent that scans a user's desktop environment before a [CEIGAS](https://github.com/CEIGASOpenSource)-governed relay is provisioned. It gathers environment intelligence so the entity can build an informed, scoped automation policy — and produces a cryptographic hash chain that prevents any tampering between scan and relay deployment.
 
 ## What It Does
 
@@ -23,7 +23,7 @@ OpenFDA is a lightweight, read-only agent that scans a user's desktop environmen
 
 ## Security Model
 
-OpenFDA exists so you don't have to trust anyone's claims about security. Read the code.
+CeigasFDA exists so you don't have to trust anyone's claims about security. Read the code.
 
 ### Hard Gates
 
@@ -38,7 +38,7 @@ These are structural rejections. No entity, no platform operator, no override ca
 | Domain joined | Machine belongs to an Active Directory or Azure AD domain |
 | Hypervisor | Running inside a virtual machine |
 
-If any hard gate triggers, OpenFDA reports `REJECT` and no relay can be provisioned. The platform cannot override this.
+If any hard gate triggers, CeigasFDA reports `REJECT` and no relay can be provisioned. The platform cannot override this.
 
 ### Hash Chain of Custody
 
@@ -74,7 +74,7 @@ Nobody in the loop can manipulate the policy — not the entity, not the platfor
 
 ### SSH Elimination
 
-CEIGAS relays do not use SSH. All communication flows through a governed tunnel where every action is policy-checked, auditable, and revocable. SSH would bypass the domain model entirely. OpenFDA verifies the environment so the relay can operate through a governed channel instead of an ungoverned pipe.
+CEIGAS relays do not use SSH. All communication flows through a governed tunnel where every action is policy-checked, auditable, and revocable. SSH would bypass the domain model entirely. CeigasFDA verifies the environment so the relay can operate through a governed channel instead of an ungoverned pipe.
 
 ## Supported Platforms
 
@@ -88,21 +88,21 @@ Desktop only. Servers, mobile devices, and virtual machines are not supported.
 ### From source (recommended for auditing)
 
 ```bash
-git clone https://github.com/CEIGASOpenSource/OpenFDA.git
-cd OpenFDA
+git clone https://github.com/CEIGASOpenSource/CeigasFDA.git
+cd CeigasFDA
 python3 -m fda --challenge <nonce_from_platform>
 ```
 
 ### From binary
 
-Download the latest release for your platform from [Releases](https://github.com/CEIGASOpenSource/OpenFDA/releases).
+Download the latest release for your platform from [Releases](https://github.com/CEIGASOpenSource/CeigasFDA/releases).
 
 ```bash
 # macOS
-./openfda --challenge <nonce_from_platform>
+./ceigasfda --challenge <nonce_from_platform>
 
 # Windows
-openfda.exe --challenge <nonce_from_platform>
+ceigasfda.exe --challenge <nonce_from_platform>
 ```
 
 The FDA will:
@@ -194,7 +194,7 @@ fda/
 
 ## Contributing
 
-OpenFDA is the public security surface of the CEIGAS relay system. Contributions that improve detection accuracy, add platform support, or identify bypass vectors are welcome.
+CeigasFDA is the public security surface of the CEIGAS relay system. Contributions that improve detection accuracy, add platform support, or identify bypass vectors are welcome.
 
 ## License
 
