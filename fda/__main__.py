@@ -31,7 +31,7 @@ from fda.report.display import display_report
 # Default submit endpoint — users don't need to think about this
 DEFAULT_SUBMIT_URL = "https://privatae.ai/api/mastercode/relay/fda-submit"
 
-VERSION = "1.3.1"
+VERSION = "1.4.0"
 
 BANNER = f"""
   ╔═══════════════════════════════════════════╗
